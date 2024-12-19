@@ -1,0 +1,5 @@
+*.sw*
+
+.gitman
+ros_packages/.gitman
+ros_packages/mrs_vins_mono_core/output/*
