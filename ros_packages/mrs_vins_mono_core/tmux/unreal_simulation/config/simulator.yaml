@@ -1,0 +1,66 @@
+simulation_rate: 250.0 # Hz
+clock_rate: 250.0 # Hz
+
+# desired realtime factor
+realtime_factor: 0.5 # [-]
+
+# if true, the RTF is automatically set such that the fastest sensor is always rendered at the desired rate
+dynamic_rtf: false
+
+# TODO describe
+collisions: true
+
+#  0 - LOW
+#  1 - MEDIUM
+#  2 - HIGH
+#  4 - EPIC
+#  5 - CINEMATIC
+ueds_graphics_settings_enum: 0
+
+# 0 -  VALLEY
+# 1 -  FOREST
+# 2 -  INFINITE_FOREST
+# 3 -  WAREHOUSE
+# 4 -  CAVE
+# 5 -  ERDING_AIRBASE
+# 6 -  TEMESVAR :D
+ueds_world_level_name_enum: 0
+
+## | --------------------- UAV DEFINITION --------------------- #
+uav_names: [
+  "uav1",
+]
+
+uav1:
+  type: "x500"
+  spawn:
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    heading: 0.0
+
+## | ------------------------- SENSORS ------------------------ #
+sensors:
+
+  rgb:
+    enabled: true
+
+    rate: 30.0 # [Hz]
+
+    width: 800 # [px]
+    height: 800 # [px]
+    fov: 120.0 # [deg]
+
+    offset_x: 0.14 # [m]
+    offset_y: 0.0 # [m]
+    offset_z: 0.0 # [m]
+
+    rotation_pitch: 0.0 # [deg]
+    rotation_yaw: 0.0 # [deg]
+    rotation_roll: 0.0 # [deg]
+
+  stereo:
+    enabled: false
+
+  lidar:
+    enabled: false
