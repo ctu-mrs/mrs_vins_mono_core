@@ -14,9 +14,9 @@
 
   <depend>cmake_modules</depend>
 
-  <depend>vins_estimator</depend>
-  <depend>feature_tracker</depend>
-  <depend>pose_graph</depend>
+  <depend>vins_mono_vins_estimator</depend>
+  <depend>vins_mono_feature_tracker</depend>
+  <depend>vins_mono_pose_graph</depend>
   <depend>mrs_vins_mono_estimator_plugin</depend>
   <depend>mrs_vins_kickoff_estimator_plugin</depend>
   <depend>mrs_vins_republisher</depend>
