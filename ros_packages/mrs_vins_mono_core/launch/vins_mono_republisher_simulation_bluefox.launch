@@ -44,7 +44,7 @@
 
       <param name="uav_name" value="$(arg UAV_NAME)"/>
 
-      <remap from="~vins_odom_in" to="vins_estimator/odometry"/>
+      <remap from="~vins_odom_in" to="vins_mono_vins_estimator/odometry"/>
       <remap from="~vins_odom_out" to="~odom"/>
 
       <remap from="~status_string" to="mrs_uav_status/display_string"/>

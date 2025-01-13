@@ -2,7 +2,7 @@
 
   <arg name="debug_print"   default="false" />
 
-  <arg name="UAV_NAME" default="$(optenv UAV_NAME)" />
+  <arg name="UAV_NAME" default="$(env UAV_NAME)" />
 
   <arg name="imu_topic" default="vio/imu" />
   <arg name="image_topic" default="vio/camera/image_raw" />
@@ -20,22 +20,27 @@
   <arg unless="$(arg DEBUG)" name="launch_prefix" value=""/>
   <arg     if="$(arg DEBUG)" name="launch_prefix" value="debug_roslaunch"/>
 
-  <!-- will it run as standalone nodelet or using a nodelet manager? -->
-  <arg name="standalone" default="true" />
-  <arg name="manager" default="$(arg UAV_NAME)_vio_manager" />
-  <arg name="n_threads" default="8" />
-  <arg unless="$(arg standalone)" name="nodelet" value="load"/>
-  <arg     if="$(arg standalone)" name="nodelet" value="standalone"/>
-  <arg unless="$(arg standalone)" name="nodelet_manager" value="$(arg manager)"/>
-  <arg     if="$(arg standalone)" name="nodelet_manager" value=""/>
-
   <group ns="$(arg UAV_NAME)">
 
-    <!-- SENSOR TOPICS -->
+    <!-- will it run as standalone nodelet or using a nodelet manager? -->
+    <arg name="standalone" default="true" />
+    <arg name="manager" default="$(arg UAV_NAME)_vins_mono_manager" />
+    <arg name="n_threads" default="8" />
+    <arg unless="$(arg standalone)" name="nodelet" value="load"/>
+    <arg     if="$(arg standalone)" name="nodelet" value="standalone"/>
+    <arg unless="$(arg standalone)" name="nodelet_manager" value="$(arg manager)"/>
+    <arg     if="$(arg standalone)" name="nodelet_manager" value=""/>
 
-    <arg name="vins_path" default = "$(find vins_mono_feature_tracker)/.." />
+<!--//{ nodelet_manager -->
+    <group unless="$(arg standalone)">
+      <node pkg="nodelet" type="nodelet" name="$(arg manager)" args="manager" output="screen" launch-prefix="$(arg launch_prefix) nice -n -10">
+        <param name="num_worker_threads" value="$(arg n_threads)" />
+      </node>
+    </group>
+<!--//}-->
 
-    <node name="feature_tracker" pkg="vins_mono_feature_tracker" type="vins_mono_feature_tracker" output="screen" launch-prefix="$(arg launch_prefix)" >
+<!--//{ feature_tracker -->
+    <node pkg="nodelet" type="nodelet" name="vins_mono_feature_tracker" args="$(arg nodelet) vins_mono/FeatureTracker $(arg nodelet_manager)" launch-prefix="$(arg launch_prefix)" output="screen">
       <param name="debug" type="bool" value="$(arg debug_print)" />
       <param name="uav_name" type="string" value="$(arg UAV_NAME)" />
       <param name="config_file" type="string" value="$(arg vins_mono_config)" />
@@ -46,8 +51,10 @@
       <remap from="~image_in" to="$(arg image_topic)" />
 
     </node>
+<!--//}-->
 
-    <node name="vins_estimator" pkg="vins_mono_vins_estimator" type="vins_mono_vins_estimator" output="screen" launch-prefix="$(arg launch_prefix)" >
+<!--//{ vins_estimator -->
+    <node pkg="nodelet" type="nodelet" name="vins_mono_vins_estimator" args="$(arg nodelet) vins_mono/VinsEstimator $(arg nodelet_manager)" launch-prefix="$(arg launch_prefix)" output="screen">
       <param name="debug" type="bool" value="$(arg debug_print)" />
       <param name="uav_name" type="string" value="$(arg UAV_NAME)" />
       <param name="config_file" type="string" value="$(arg vins_mono_config)" />
@@ -56,32 +63,35 @@
 
       <!-- subscribers -->
       <remap from="~imu_in" to="$(arg imu_topic)" />
-      <remap from="~feature_tracker/feature" to="feature_tracker/feature" />
-      <remap from="~feature_tracker/restart" to="feature_tracker/restart" />
-      <remap from="~pose_graph/match_points" to="pose_graph/match_points" />
+      <remap from="~feature_tracker/feature" to="vins_mono_feature_tracker/feature" />
+      <remap from="~feature_tracker/restart" to="vins_mono_feature_tracker/restart" />
+      <remap from="~pose_graph/match_points" to="vins_mono_pose_graph/match_points" />
 
     </node>
+<!--//}-->
 
-    <node name="pose_graph" pkg="vins_mono_pose_graph" type="vins_mono_pose_graph" output="screen" launch-prefix="$(arg launch_prefix)" >
-      <param name="debug" type="bool" value="$(arg debug_print)" />
-      <param name="uav_name" type="string" value="$(arg UAV_NAME)" />
-      <param name="config_file" type="string" value="$(arg vins_mono_config)" />
-      <param name="output_path" type="string" value="$(arg output_path)" />
-      <param name="visualization_shift_x" type="int" value="0" />
-      <param name="visualization_shift_y" type="int" value="0" />
-      <param name="skip_cnt" type="int" value="0" />
-      <param name="skip_dis" type="double" value="0" />
+<!--//{ pose_graph -->
+    <!-- <node pkg="nodelet" type="nodelet" name="vins_mono_pose_graph" args="$(arg nodelet) vins_mono/PoseGraph $(arg nodelet_manager)" launch-prefix="$(arg launch_prefix)" output="screen"> -->
+    <!--   <param name="debug" type="bool" value="$(arg debug_print)" /> -->
+    <!--   <param name="uav_name" type="string" value="$(arg UAV_NAME)" /> -->
+    <!--   <param name="config_file" type="string" value="$(arg vins_mono_config)" /> -->
+    <!--   <param name="output_path" type="string" value="$(arg output_path)" /> -->
+    <!--   <param name="visualization_shift_x" type="int" value="0" /> -->
+    <!--   <param name="visualization_shift_y" type="int" value="0" /> -->
+    <!--   <param name="skip_cnt" type="int" value="0" /> -->
+    <!--   <param name="skip_dis" type="double" value="0" /> -->
 
-      <!-- subscribers -->
-      <remap from="~image_in" to="$(arg image_topic)" />
-      <remap from="~vins_estimator/imu_propagate" to="vins_estimator/imu_propagate" />
-      <remap from="~vins_estimator/odometry" to="vins_estimator/odometry" />
-      <remap from="~vins_estimator/keyframe_pose" to="vins_estimator/keyframe_pose" />
-      <remap from="~vins_estimator/keyframe_point" to="vins_estimator/keyframe_point" />
-      <remap from="~vins_estimator/relo_relative_pose" to="vins_estimator/relo_relative_pose" />
-      <remap from="~vins_estimator/extrinsic" to="vins_estimator/extrinsic" />
+    <!--   <!-1- subscribers -1-> -->
+    <!--   <remap from="~image_in" to="$(arg image_topic)" /> -->
+    <!--   <remap from="~vins_estimator/imu_propagate" to="vins_mono_vins_estimator/imu_propagate" /> -->
+    <!--   <remap from="~vins_estimator/odometry" to="vins_mono_vins_estimator/odometry" /> -->
+    <!--   <remap from="~vins_estimator/keyframe_pose" to="vins_mono_vins_estimator/keyframe_pose" /> -->
+    <!--   <remap from="~vins_estimator/keyframe_point" to="vins_mono_vins_estimator/keyframe_point" /> -->
+    <!--   <remap from="~vins_estimator/relo_relative_pose" to="vins_mono_vins_estimator/relo_relative_pose" /> -->
+    <!--   <remap from="~vins_estimator/extrinsic" to="vins_mono_vins_estimator/extrinsic" /> -->
 
-    </node>
+    <!-- </node> -->
+<!--//}-->
 
   </group>
 
